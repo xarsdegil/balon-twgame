@@ -9,11 +9,7 @@ namespace BalloonGame
     {
         public CommandManager commandManager;
         public BalloonGameManager gameManager;
-        public string[] testNames =
-        {
-            "Baloncu", "GeceKusu", "PikselKedi", "MorEjder", "KahveMolasi",
-            "Ruzgar", "NeonTilki", "MinikDev", "AyIsigi", "KirmiziPanda"
-        };
+        public BalloonLanguage language;
 
         private int nextUserIndex;
 
@@ -42,7 +38,8 @@ namespace BalloonGame
         [ContextMenu("Add Test Player")]
         public void AddTestPlayer()
         {
-            string name = testNames[nextUserIndex % testNames.Length];
+            string[] names = language.localTestNames;
+            string name = names[nextUserIndex % names.Length];
             string id = "local-" + nextUserIndex;
             Color color = Color.HSVToRGB(Mathf.Repeat(nextUserIndex * 0.137f + 0.46f, 1f), 0.58f, 1f);
             nextUserIndex++;
@@ -59,4 +56,3 @@ namespace BalloonGame
         }
     }
 }
-

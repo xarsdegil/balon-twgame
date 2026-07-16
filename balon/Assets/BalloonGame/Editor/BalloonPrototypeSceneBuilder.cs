@@ -13,6 +13,7 @@ namespace BalloonGame.Editor
     public static class BalloonPrototypeSceneBuilder
     {
         private const string SettingsPath = "Assets/BalloonGame/Config/BalloonGameSettings.asset";
+        private const string LanguagePath = "Assets/BalloonGame/Config/BalloonLanguageEnglish.asset";
         private const string ScenePath = "Assets/Scenes/BalloonGame.unity";
 
         [InitializeOnLoadMethod]
@@ -47,6 +48,12 @@ namespace BalloonGame.Editor
         public static void BuildScene()
         {
             BalloonGameSettings settings = LoadOrCreateSettings();
+            BalloonLanguage language = LoadOrCreateLanguage();
+            settings.language = language;
+            if (settings.command == "!sisir")
+                settings.command = language.defaultCommand;
+            if (settings.explosionChatMessage == "@{player} balonu patlatti!")
+                settings.explosionChatMessage = language.defaultExplosionChatMessage;
             ApplySquarePlayerSettings(settings);
 
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -166,13 +173,16 @@ namespace BalloonGame.Editor
             game.commandManager = commands;
             game.balloonController = balloon;
             game.hud = hud;
+            game.twitchChatService = twitch;
 
             testInput.commandManager = commands;
             testInput.gameManager = game;
+            testInput.language = language;
 
             CreateSettingsInterface(
                 canvasObject.transform,
                 settings,
+                language,
                 font,
                 camera,
                 background,
@@ -197,6 +207,7 @@ namespace BalloonGame.Editor
         private static void CreateSettingsInterface(
             Transform parent,
             BalloonGameSettings settings,
+            BalloonLanguage language,
             Font font,
             Camera gameCamera,
             Image background,
@@ -210,14 +221,14 @@ namespace BalloonGame.Editor
             Color accentColor = new Color32(145, 70, 255, 255);
 
             Button openButton = Button(
-                "AYAR",
+                language.settingsButton,
                 parent,
                 font,
                 fieldColor,
                 textColor,
                 new Vector2(1f, 1f),
-                new Vector2(-78f, -54f),
-                new Vector2(118f, 52f));
+                new Vector2(-92f, -54f),
+                new Vector2(146f, 52f));
             openButton.gameObject.name = "Hover Settings Button";
             CanvasGroup buttonGroup = openButton.gameObject.AddComponent<CanvasGroup>();
 
@@ -237,12 +248,12 @@ namespace BalloonGame.Editor
                 new Vector2(0.5f, 0.5f),
                 new Vector2(0.5f, 0.5f),
                 Vector2.zero,
-                new Vector2(820f, 970f));
+                new Vector2(900f, 940f));
             Image sheetImage = sheet.gameObject.AddComponent<Image>();
             sheetImage.color = panelColor;
 
             Label(
-                "OYUN AYARLARI",
+                language.settingsTitle,
                 sheet,
                 font,
                 38,
@@ -251,90 +262,98 @@ namespace BalloonGame.Editor
                 TextAnchor.MiddleLeft,
                 new Vector2(0.5f, 1f),
                 new Vector2(0.5f, 1f),
-                new Vector2(-340f, -55f),
-                new Vector2(520f, 60f));
+                new Vector2(-175f, -52f),
+                new Vector2(490f, 60f));
 
             Button closeButton = Button(
-                "KAPAT",
+                language.closeButton,
                 sheet,
                 font,
                 fieldColor,
                 textColor,
                 new Vector2(1f, 1f),
-                new Vector2(-76f, -58f),
-                new Vector2(116f, 48f));
+                new Vector2(-82f, -54f),
+                new Vector2(132f, 46f));
 
-            float y = 344f;
-            const float step = 58f;
-            InputField commandInput = SettingsInput("Komut", settings.command, y);
+            float y = 312f;
+            const float step = 53f;
+            InputField commandInput = SettingsInput(language.commandLabel, settings.command, y);
+            y -= step;
+            InputField explosionMessageInput = SettingsInput(
+                language.explosionMessageLabel,
+                settings.explosionChatMessage,
+                y);
             y -= step;
             InputField backgroundInput = SettingsInput(
-                "Arka plan rengi",
+                language.backgroundColorLabel,
                 "#" + ColorUtility.ToHtmlStringRGB(settings.backgroundColor),
                 y);
             y -= step;
-            Toggle transparentToggle = SettingsToggle("Şeffaf arka plan", false, y);
+            Toggle transparentToggle = SettingsToggle(language.transparentBackgroundLabel, false, y);
             y -= step;
             InputField balloonColorInput = SettingsInput(
-                "Balon rengi",
+                language.balloonColorLabel,
                 "#" + ColorUtility.ToHtmlStringRGB(settings.balloonColor),
                 y);
             y -= step;
-            Toggle showNamesToggle = SettingsToggle("Oyuncu adını göster", settings.showPlayerNames, y);
+            Toggle showNamesToggle = SettingsToggle(
+                language.showPlayerNamesLabel,
+                settings.showPlayerNames,
+                y);
             y -= step;
             Toggle oneTurnToggle = SettingsToggle(
-                "Tur başına tek katılım",
+                language.oneTurnPerRoundLabel,
                 settings.oneTurnPerUserPerRound,
                 y);
             y -= step;
             InputField cooldownInput = SettingsInput(
-                "Kullanıcı bekleme süresi",
+                language.cooldownLabel,
                 settings.userCooldownSeconds.ToString("0.##"),
                 y);
             y -= step;
             InputField minimumInput = SettingsInput(
-                "Minimum şişirme",
+                language.minimumInflationsLabel,
                 settings.minimumInflations.ToString(),
                 y);
             y -= step;
             InputField maximumInput = SettingsInput(
-                "Maksimum şişirme",
+                language.maximumInflationsLabel,
                 settings.maximumInflations.ToString(),
                 y);
             y -= step;
             InputField queueInput = SettingsInput(
-                "Maksimum kuyruk",
+                language.maximumQueueLabel,
                 settings.maximumQueueLength.ToString(),
                 y);
             y -= step;
             InputField durationInput = SettingsInput(
-                "Şişirme süresi",
+                language.inflationDurationLabel,
                 settings.inflationDuration.ToString("0.##"),
                 y);
             y -= step;
             Toggle clearQueueToggle = SettingsToggle(
-                "Patlamada kuyruğu temizle",
+                language.clearQueueLabel,
                 settings.clearQueueAfterExplosion,
                 y);
 
             Button resetButton = Button(
-                "VARSAYILAN",
+                language.resetButton,
                 sheet,
                 font,
                 fieldColor,
                 textColor,
                 new Vector2(0.5f, 0f),
-                new Vector2(-155f, 67f),
-                new Vector2(240f, 62f));
+                new Vector2(-160f, 58f),
+                new Vector2(260f, 58f));
             Button saveButton = Button(
-                "KAYDET",
+                language.saveButton,
                 sheet,
                 font,
                 accentColor,
                 textColor,
                 new Vector2(0.5f, 0f),
-                new Vector2(155f, 67f),
-                new Vector2(240f, 62f));
+                new Vector2(160f, 58f),
+                new Vector2(260f, 58f));
             Text feedback = Label(
                 string.Empty,
                 sheet,
@@ -345,7 +364,7 @@ namespace BalloonGame.Editor
                 TextAnchor.MiddleCenter,
                 new Vector2(0.5f, 0f),
                 new Vector2(0.5f, 0f),
-                new Vector2(0f, 20f),
+                new Vector2(0f, 18f),
                 new Vector2(600f, 30f));
 
             BalloonSettingsPanel controller = parent.gameObject.AddComponent<BalloonSettingsPanel>();
@@ -361,6 +380,7 @@ namespace BalloonGame.Editor
             controller.resetButton = resetButton;
             controller.feedbackText = feedback;
             controller.commandInput = commandInput;
+            controller.explosionChatMessageInput = explosionMessageInput;
             controller.backgroundColorInput = backgroundInput;
             controller.transparentBackgroundToggle = transparentToggle;
             controller.balloonColorInput = balloonColorInput;
@@ -384,14 +404,14 @@ namespace BalloonGame.Editor
                     title,
                     sheet,
                     font,
-                    19,
+                    18,
                     FontStyle.Normal,
                     mutedColor,
                     TextAnchor.MiddleLeft,
                     new Vector2(0.5f, 0.5f),
                     new Vector2(0.5f, 0.5f),
-                    new Vector2(-335f, rowY),
-                    new Vector2(350f, 44f));
+                    new Vector2(-210f, rowY),
+                    new Vector2(350f, 42f));
                 return Input(
                     title,
                     value,
@@ -401,7 +421,7 @@ namespace BalloonGame.Editor
                     textColor,
                     new Vector2(0.5f, 0.5f),
                     new Vector2(205f, rowY),
-                    new Vector2(300f, 44f));
+                    new Vector2(360f, 42f));
             }
 
             Toggle SettingsToggle(string title, bool value, float rowY)
@@ -410,14 +430,14 @@ namespace BalloonGame.Editor
                     title,
                     sheet,
                     font,
-                    19,
+                    18,
                     FontStyle.Normal,
                     mutedColor,
                     TextAnchor.MiddleLeft,
                     new Vector2(0.5f, 0.5f),
                     new Vector2(0.5f, 0.5f),
-                    new Vector2(-335f, rowY),
-                    new Vector2(500f, 44f));
+                    new Vector2(-145f, rowY),
+                    new Vector2(480f, 42f));
                 return Toggle(
                     title,
                     sheet,
@@ -425,7 +445,7 @@ namespace BalloonGame.Editor
                     fieldColor,
                     accentColor,
                     new Vector2(0.5f, 0.5f),
-                    new Vector2(330f, rowY));
+                    new Vector2(365f, rowY));
             }
         }
 
@@ -521,6 +541,18 @@ namespace BalloonGame.Editor
             settings = ScriptableObject.CreateInstance<BalloonGameSettings>();
             AssetDatabase.CreateAsset(settings, SettingsPath);
             return settings;
+        }
+
+        private static BalloonLanguage LoadOrCreateLanguage()
+        {
+            BalloonLanguage language = AssetDatabase.LoadAssetAtPath<BalloonLanguage>(LanguagePath);
+            if (language != null)
+                return language;
+
+            Directory.CreateDirectory("Assets/BalloonGame/Config");
+            language = ScriptableObject.CreateInstance<BalloonLanguage>();
+            AssetDatabase.CreateAsset(language, LanguagePath);
+            return language;
         }
 
         private static void ApplySquarePlayerSettings(BalloonGameSettings settings)

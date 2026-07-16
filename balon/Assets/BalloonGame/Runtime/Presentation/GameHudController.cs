@@ -41,8 +41,8 @@ namespace BalloonGame
         private void Start()
         {
             if (commandText != null)
-                commandText.text = settings != null ? settings.command : "!sisir";
-            SetConnectionStatus(twitchService != null ? twitchService.Status : "Yerel test modu");
+                commandText.text = settings.command;
+            SetConnectionStatus(twitchService != null ? twitchService.Status : settings.language.localTestMode);
             SetState(BalloonGameState.Waiting);
             SetCurrentPlayer(null);
             RefreshQueue();
@@ -57,19 +57,19 @@ namespace BalloonGame
             switch (state)
             {
                 case BalloonGameState.Inflating:
-                    stateText.text = "ŞİŞİRİLİYOR";
+                    stateText.text = settings.language.inflating;
                     break;
                 case BalloonGameState.CheckingExplosion:
-                    stateText.text = "GERİLİM ARTIYOR";
+                    stateText.text = settings.language.tensionRising;
                     break;
                 case BalloonGameState.Exploding:
-                    stateText.text = "PATLADI!";
+                    stateText.text = settings.language.exploded;
                     break;
                 case BalloonGameState.Resetting:
-                    stateText.text = "YENİ TUR";
+                    stateText.text = settings.language.newRound;
                     break;
                 default:
-                    stateText.text = "OYUNCU BEKLENİYOR";
+                    stateText.text = settings.language.waitingForPlayer;
                     break;
             }
         }
@@ -77,7 +77,9 @@ namespace BalloonGame
         public void SetRound(int roundNumber)
         {
             if (roundText != null)
-                roundText.text = "TUR " + roundNumber.ToString("00");
+                roundText.text = settings.language.roundFormat.Replace(
+                    "{round}",
+                    roundNumber.ToString("00"));
         }
 
         public void SetCurrentPlayer(ChatPlayer player)
@@ -106,7 +108,9 @@ namespace BalloonGame
 
         private IEnumerator ResultAnimation(ChatPlayer player)
         {
-            resultText.text = "BALONU\n" + player.displayName.ToUpperInvariant() + "\nPATLATTI!";
+            resultText.text = settings.language.resultFormat.Replace(
+                "{player}",
+                player.displayName.ToUpperInvariant());
             resultText.color = player.nameColor;
             float elapsed = 0f;
             const float entrance = 0.24f;
@@ -144,7 +148,7 @@ namespace BalloonGame
             var preview = commandManager.GetQueuePreview(6);
             if (preview.Count == 0)
             {
-                builder.Append("Henüz kimse sırada değil");
+                builder.Append(settings.language.emptyQueue);
             }
             else
             {

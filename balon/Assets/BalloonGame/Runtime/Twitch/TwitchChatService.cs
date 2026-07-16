@@ -18,7 +18,7 @@ namespace BalloonGame
 
         [Header("Runtime Status (read only)")]
         [SerializeField] private bool isConnected;
-        [SerializeField] private string status = "Yerel test modu";
+        [SerializeField] private string status = "";
 
         public event Action<ChatPlayer, string> MessageReceived;
         public event Action<string> StatusChanged;
@@ -35,7 +35,7 @@ namespace BalloonGame
             if (settings != null && settings.connectToTwitchOnStart)
                 Connect();
             else
-                SetStatus("Yerel test modu", false);
+                SetStatus(settings != null ? settings.language.localTestMode : string.Empty, false);
         }
 
         private void Update()
@@ -54,7 +54,7 @@ namespace BalloonGame
         {
             if (settings == null)
             {
-                SetStatus("Twitch ayarları eksik", false);
+                SetStatus(string.Empty, false);
                 return;
             }
 
@@ -76,12 +76,12 @@ namespace BalloonGame
 
             if (string.IsNullOrWhiteSpace(channel))
             {
-                SetStatus("Twitch kanal adı eksik", false);
+                SetStatus(settings.language.twitchChannelMissing, false);
                 return;
             }
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(token))
             {
-                SetStatus("Twitch kullanıcı adı veya chat:read tokenı eksik", false);
+                SetStatus(settings.language.twitchCredentialsMissing, false);
                 return;
             }
 
@@ -101,7 +101,11 @@ namespace BalloonGame
             client?.Close();
             client = null;
             if (isActiveAndEnabled)
-                SetStatus("Bağlantı kapalı", false);
+                SetStatus(
+                    settings != null && settings.language != null
+                        ? settings.language.disconnected
+                        : string.Empty,
+                    false);
         }
 
         public bool SendChatMessage(string message)
@@ -133,7 +137,7 @@ namespace BalloonGame
         {
             try
             {
-                EnqueueStatus("Twitch'e bağlanıyor…", false);
+                EnqueueStatus(settings.language.connecting, false);
                 client = new TcpClient();
                 await client.ConnectAsync("irc.chat.twitch.tv", 6697);
 
@@ -149,7 +153,9 @@ namespace BalloonGame
                 await writer.WriteLineAsync("NICK " + username);
                 await writer.WriteLineAsync("CAP REQ :twitch.tv/tags twitch.tv/commands");
                 await writer.WriteLineAsync("JOIN #" + channel);
-                EnqueueStatus("#" + channel + " chatine bağlı", true);
+                EnqueueStatus(
+                    settings.language.connectedToChannel.Replace("{channel}", channel),
+                    true);
 
                 while (!token.IsCancellationRequested && client.Connected)
                 {
@@ -169,16 +175,18 @@ namespace BalloonGame
             catch (Exception exception)
             {
                 if (!token.IsCancellationRequested)
-                    EnqueueStatus("Twitch hatası: " + exception.Message, false);
+                    EnqueueStatus(
+                        settings.language.twitchError.Replace("{error}", exception.Message),
+                        false);
             }
             finally
             {
                 if (!token.IsCancellationRequested)
-                    EnqueueStatus("Twitch bağlantısı kesildi", false);
+                    EnqueueStatus(settings.language.connectionLost, false);
             }
         }
 
-        private static bool TryParsePrivMessage(string line, out ChatPlayer player, out string message)
+        private bool TryParsePrivMessage(string line, out ChatPlayer player, out string message)
         {
             player = null;
             message = null;
@@ -198,7 +206,7 @@ namespace BalloonGame
             int userEnd = prefix.IndexOf('!', userStart);
             string username = userStart > 0 && userEnd > userStart
                 ? prefix.Substring(userStart, userEnd - userStart)
-                : "viewer";
+                : settings.language.unknownViewer;
 
             tags.TryGetValue("user-id", out string userId);
             tags.TryGetValue("display-name", out string displayName);

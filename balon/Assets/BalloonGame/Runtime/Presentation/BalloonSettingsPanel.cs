@@ -23,6 +23,7 @@ namespace BalloonGame
 
         [Header("Fields")]
         public InputField commandInput;
+        public InputField explosionChatMessageInput;
         public InputField backgroundColorInput;
         public Toggle transparentBackgroundToggle;
         public InputField balloonColorInput;
@@ -41,7 +42,10 @@ namespace BalloonGame
         {
             defaults = CaptureCurrentSettings();
             if (BalloonUserSettingsStore.TryLoad(out BalloonUserSettings saved))
+            {
+                MigrateLegacyTurkishDefaults(saved);
                 Apply(saved);
+            }
             else
                 Apply(defaults);
         }
@@ -74,7 +78,7 @@ namespace BalloonGame
             Apply(values);
             BalloonUserSettingsStore.Save(values);
             PopulateFields(values);
-            feedbackText.text = "Ayarlar kaydedildi";
+            feedbackText.text = settings.language.settingsSaved;
         }
 
         private void ResetToDefaults()
@@ -82,7 +86,7 @@ namespace BalloonGame
             BalloonUserSettingsStore.Delete();
             Apply(defaults);
             PopulateFields(defaults);
-            feedbackText.text = "Varsayılan ayarlar yüklendi";
+            feedbackText.text = settings.language.defaultsRestored;
         }
 
         private BalloonUserSettings ReadFields()
@@ -92,6 +96,7 @@ namespace BalloonGame
             return new BalloonUserSettings
             {
                 command = NormalizeCommand(commandInput.text),
+                explosionChatMessage = NormalizeExplosionMessage(explosionChatMessageInput.text),
                 backgroundColorHex = NormalizeColor(backgroundColorInput.text, settings.backgroundColor),
                 transparentBackground = transparentBackgroundToggle.isOn,
                 balloonColorHex = NormalizeColor(balloonColorInput.text, settings.balloonColor),
@@ -109,6 +114,7 @@ namespace BalloonGame
         private void Apply(BalloonUserSettings values)
         {
             settings.command = NormalizeCommand(values.command);
+            settings.explosionChatMessage = NormalizeExplosionMessage(values.explosionChatMessage);
             settings.backgroundColor = ParseColor(values.backgroundColorHex, defaults != null
                 ? ParseColor(defaults.backgroundColorHex, settings.backgroundColor)
                 : settings.backgroundColor);
@@ -147,6 +153,7 @@ namespace BalloonGame
             return new BalloonUserSettings
             {
                 command = settings.command,
+                explosionChatMessage = settings.explosionChatMessage,
                 backgroundColorHex = ColorUtility.ToHtmlStringRGB(settings.backgroundColor),
                 transparentBackground = transparent,
                 balloonColorHex = ColorUtility.ToHtmlStringRGB(settings.balloonColor),
@@ -164,6 +171,7 @@ namespace BalloonGame
         private void PopulateFields(BalloonUserSettings values)
         {
             commandInput.text = values.command;
+            explosionChatMessageInput.text = NormalizeExplosionMessage(values.explosionChatMessage);
             backgroundColorInput.text = "#" + values.backgroundColorHex.TrimStart('#');
             transparentBackgroundToggle.isOn = values.transparentBackground;
             balloonColorInput.text = "#" + values.balloonColorHex.TrimStart('#');
@@ -177,12 +185,28 @@ namespace BalloonGame
             clearQueueToggle.isOn = values.clearQueueAfterExplosion;
         }
 
-        private static string NormalizeCommand(string value)
+        private string NormalizeCommand(string value)
         {
             string command = (value ?? string.Empty).Trim();
             if (string.IsNullOrWhiteSpace(command))
-                command = "!sisir";
+                command = settings.language.defaultCommand;
             return command.StartsWith("!") ? command : "!" + command;
+        }
+
+        private string NormalizeExplosionMessage(string value)
+        {
+            string message = (value ?? string.Empty).Replace("\r", " ").Replace("\n", " ").Trim();
+            return string.IsNullOrWhiteSpace(message)
+                ? settings.language.defaultExplosionChatMessage
+                : message;
+        }
+
+        private void MigrateLegacyTurkishDefaults(BalloonUserSettings values)
+        {
+            if (values.command == "!sisir")
+                values.command = settings.language.defaultCommand;
+            if (values.explosionChatMessage == "@{player} balonu patlatti!")
+                values.explosionChatMessage = settings.language.defaultExplosionChatMessage;
         }
 
         private static string NormalizeColor(string value, Color fallback)
@@ -219,4 +243,3 @@ namespace BalloonGame
         }
     }
 }
-

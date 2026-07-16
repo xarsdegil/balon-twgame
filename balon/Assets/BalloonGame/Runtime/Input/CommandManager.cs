@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine;
 
 namespace BalloonGame
@@ -36,8 +37,7 @@ namespace BalloonGame
             if (settings == null)
                 return;
 
-            string normalized = (message ?? string.Empty).Trim();
-            if (!normalized.Equals(settings.command.Trim(), StringComparison.OrdinalIgnoreCase))
+            if (!MatchesCommand(message, settings.command))
                 return;
 
             TrySubmit(player);
@@ -49,19 +49,46 @@ namespace BalloonGame
                 return false;
 
             float now = Time.unscaledTime;
-            if (playerQueue.Contains(player.userId))
-                return Reject("Bu kullanıcı zaten sırada.");
-            if (settings.oneTurnPerUserPerRound && playedThisRound.Contains(player.userId))
-                return Reject("Bu kullanıcı bu turda oynadı.");
+            if (settings.oneTurnPerUserPerRound &&
+                (playedThisRound.Contains(player.userId) || playerQueue.Contains(player.userId)))
+                return Reject(settings.language.alreadyPlayedThisRound);
             if (lastCommandTimes.TryGetValue(player.userId, out float lastTime) &&
                 now - lastTime < settings.userCooldownSeconds)
-                return Reject("Kullanıcı bekleme süresinde.");
+                return Reject(settings.language.playerOnCooldown);
             if (!playerQueue.TryEnqueue(player, settings.maximumQueueLength))
-                return Reject("Kuyruk dolu.");
+                return Reject(settings.language.queueFull);
 
             lastCommandTimes[player.userId] = now;
             QueueChanged?.Invoke();
             return true;
+        }
+
+        private static bool MatchesCommand(string message, string configuredCommand)
+        {
+            string normalized = RemoveInvisibleCharacters(message).Trim();
+            string command = (configuredCommand ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(command))
+                return false;
+            if (normalized.Equals(command, StringComparison.OrdinalIgnoreCase))
+                return true;
+            return normalized.Length > command.Length &&
+                   normalized.StartsWith(command, StringComparison.OrdinalIgnoreCase) &&
+                   char.IsWhiteSpace(normalized[command.Length]);
+        }
+
+        private static string RemoveInvisibleCharacters(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return string.Empty;
+
+            System.Text.StringBuilder builder = new System.Text.StringBuilder(value.Length);
+            foreach (char character in value)
+            {
+                UnicodeCategory category = char.GetUnicodeCategory(character);
+                if (category != UnicodeCategory.Format)
+                    builder.Append(character);
+            }
+            return builder.ToString();
         }
 
         public bool TryGetNextPlayer(out ChatPlayer player)
@@ -95,4 +122,3 @@ namespace BalloonGame
         }
     }
 }
-

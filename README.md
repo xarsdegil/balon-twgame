@@ -1,6 +1,6 @@
 # Twitch Etkileşimli Balon Oyunu
 
-Unity 6 ile hazırlanmış, Twitch chat üzerinden `!sisir` komutuyla çalışan yayın içi mini oyun prototipi.
+Unity 6 ile hazırlanmış, Twitch chat üzerinden varsayılan olarak `!inflate` komutuyla çalışan yayın içi mini oyun prototipi.
 
 ## Hızlı başlangıç
 
@@ -45,6 +45,10 @@ Bu prototip, aktif olarak desteklenen SSL IRC bağlantısını kullanır. Twitch
 
 ## Oyun içi ayarlar
 
-Fare oyun penceresinin üzerine geldiğinde sağ üstte `AYAR` düğmesi görünür. Ayarlar kullanıcıya özel olarak `Application.persistentDataPath` altında JSON dosyasında tutulur.
+Fare oyun penceresinin üzerine geldiğinde sağ üstte `SETTINGS` düğmesi görünür. Ayarlar kullanıcıya özel olarak `Application.persistentDataPath` altında JSON dosyasında tutulur.
 
-Panelden komut, arka plan rengi/şeffaflığı, balon rengi, oyuncu adları, katılım kuralı, cooldown, patlama aralığı, kuyruk kapasitesi ve animasyon süresi değiştirilebilir. Şeffaf arka plan seçeneği render edilen arka planın alfa değerini sıfırlar; OBS tarafında kullanılan yakalama yönteminin alfa desteği açık olmalıdır.
+Panelden komut, patlama chat mesajı, arka plan rengi/şeffaflığı, balon rengi, oyuncu adları, katılım kuralı, cooldown, patlama aralığı, kuyruk kapasitesi ve animasyon süresi değiştirilebilir. Patlama mesajında `{player}` görünen Twitch adını, `{username}` ise kullanıcı giriş adını temsil eder. Şeffaf arka plan seçeneği render edilen arka planın alfa değerini sıfırlar; OBS tarafında kullanılan yakalama yönteminin alfa desteği açık olmalıdır.
+
+## Language file
+
+Oyunda kullanıcıya gösterilen bütün sabit metinler `Assets/BalloonGame/Config/BalloonLanguageEnglish.asset` dosyasında tutulur. Yeni bir kullanıcı arayüzü metni eklenirken doğrudan script veya sahne içine yazılmamalı, önce `BalloonLanguage` assetine alan olarak eklenmelidir. Yeni bir çeviri için bu asset çoğaltılıp `BalloonGameSettings > Language` alanına atanabilir.

@@ -6,6 +6,7 @@ namespace BalloonGame
     public class BalloonUserSettings
     {
         public string command;
+        public string explosionChatMessage;
         public string backgroundColorHex;
         public bool transparentBackground;
         public string balloonColorHex;
@@ -19,4 +20,3 @@ namespace BalloonGame
         public bool clearQueueAfterExplosion;
     }
 }
-

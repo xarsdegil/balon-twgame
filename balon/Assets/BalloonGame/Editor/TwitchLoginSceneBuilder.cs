@@ -15,6 +15,7 @@ namespace BalloonGame.Editor
         private const string LoginScenePath = "Assets/Scenes/TwitchLogin.unity";
         private const string GameScenePath = "Assets/Scenes/BalloonGame.unity";
         private const string SettingsPath = "Assets/BalloonGame/Config/BalloonGameSettings.asset";
+        private const string LanguagePath = "Assets/BalloonGame/Config/BalloonLanguageEnglish.asset";
 
         [InitializeOnLoadMethod]
         private static void BuildMissingLoginSceneWhenSafe()
@@ -42,6 +43,9 @@ namespace BalloonGame.Editor
             Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             BalloonGameSettings settings =
                 AssetDatabase.LoadAssetAtPath<BalloonGameSettings>(SettingsPath);
+            BalloonLanguage language =
+                AssetDatabase.LoadAssetAtPath<BalloonLanguage>(LanguagePath);
+            settings.language = language;
 
             GameObject cameraObject = new GameObject("Main Camera", typeof(Camera), typeof(AudioListener));
             cameraObject.tag = "MainCamera";
@@ -94,7 +98,7 @@ namespace BalloonGame.Editor
                 new Vector2(720f, 620f));
 
             Label(
-                "TWITCH BAĞLANTISI",
+                language.loginTitle,
                 loginGroup,
                 font,
                 48,
@@ -107,7 +111,7 @@ namespace BalloonGame.Editor
                 new Vector2(680f, 70f));
 
             Label(
-                "Balon oyununu kanalına bağlamak için Twitch hesabınla giriş yap.",
+                language.loginDescription,
                 loginGroup,
                 font,
                 22,
@@ -120,7 +124,7 @@ namespace BalloonGame.Editor
                 new Vector2(680f, 70f));
 
             Button loginButton = Button(
-                "Twitch ile giriş yap",
+                language.loginButton,
                 loginGroup,
                 font,
                 twitchColor,
@@ -142,7 +146,7 @@ namespace BalloonGame.Editor
                 new Vector2(650f, 70f));
 
             Text statusText = Label(
-                "Devam etmek için Twitch ile giriş yap.",
+                language.loginReady,
                 loginGroup,
                 font,
                 19,
@@ -162,7 +166,7 @@ namespace BalloonGame.Editor
                 Vector2.zero,
                 new Vector2(720f, 200f));
             Label(
-                "TWITCH OTURUMU KONTROL EDİLİYOR…",
+                language.checkingSavedSession,
                 loadingGroup,
                 font,
                 28,
@@ -177,7 +181,9 @@ namespace BalloonGame.Editor
             GameObject controllerObject = new GameObject("Twitch Login Controller");
             TwitchAuthService authService = controllerObject.AddComponent<TwitchAuthService>();
             TwitchLoginController controller = controllerObject.AddComponent<TwitchLoginController>();
+            authService.language = language;
             controller.settings = settings;
+            controller.language = language;
             controller.loadingGroup = loadingGroup.gameObject;
             controller.loginGroup = loginGroup.gameObject;
             controller.loginButton = loginButton;

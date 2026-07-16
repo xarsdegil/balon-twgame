@@ -12,12 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a8dbfbc6153e64a4695ea3bf60783901, type: 3}
   m_Name: BalloonGameSettings
   m_EditorClassIdentifier: Assembly-CSharp::BalloonGame.BalloonGameSettings
+  language: {fileID: 11400000, guid: 3c9f633c19fa4de688d9d01cb7015bcc, type: 2}
   twitchClientId: ulltj8z49x0rvmi94624d6obf0erys
   twitchChannel: 
   twitchUsername: 
-  command: '!sisir'
+  command: '!inflate'
   oauthToken: 
   connectToTwitchOnStart: 1
+  explosionChatMessage: '@{player} popped the balloon!'
   minimumInflations: 3
   maximumInflations: 35
   maximumQueueLength: 20

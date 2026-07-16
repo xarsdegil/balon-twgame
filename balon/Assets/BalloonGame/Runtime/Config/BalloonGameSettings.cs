@@ -5,6 +5,9 @@ namespace BalloonGame
     [CreateAssetMenu(fileName = "BalloonGameSettings", menuName = "Balloon Game/Game Settings")]
     public class BalloonGameSettings : ScriptableObject
     {
+        [Header("Language")]
+        public BalloonLanguage language;
+
         [Header("Twitch")]
         [Tooltip("Public Twitch application Client ID. End users never enter this value.")]
         public string twitchClientId = "";
@@ -12,10 +15,12 @@ namespace BalloonGame
         public string twitchChannel = "";
         [Tooltip("The Twitch account that owns the OAuth token. This may be a dedicated bot account.")]
         public string twitchUsername = "";
-        public string command = "!sisir";
+        public string command = "!inflate";
         [Tooltip("User Access Token with chat:read. Prefer the TWITCH_OAUTH_TOKEN environment variable.")]
         public string oauthToken = "";
         public bool connectToTwitchOnStart;
+        [Tooltip("Sent to the connected channel when a Twitch viewer pops the balloon. Use {player} or {username}.")]
+        public string explosionChatMessage = "@{player} popped the balloon!";
 
         [Header("Round Rules")]
         [Min(1)] public int minimumInflations = 3;

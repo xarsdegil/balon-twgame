@@ -17,6 +17,7 @@ namespace BalloonGame
         private static readonly string[] RequiredScopeList = { "chat:read", "chat:edit" };
 
         public static TwitchAuthService Instance { get; private set; }
+        public BalloonLanguage language;
         public TwitchAuthSession Session { get; private set; }
         public bool HasAuthenticatedSession => Session != null && Session.HasAccessToken;
 
@@ -77,7 +78,7 @@ namespace BalloonGame
             string normalizedClientId = (clientId ?? string.Empty).Trim();
             if (string.IsNullOrWhiteSpace(normalizedClientId))
             {
-                AuthenticationFailed?.Invoke("Twitch Client ID girilmelidir.");
+                AuthenticationFailed?.Invoke(language.clientIdRequired);
                 return;
             }
 
@@ -91,7 +92,7 @@ namespace BalloonGame
             if (activeAuthentication != null)
                 StopCoroutine(activeAuthentication);
             activeAuthentication = null;
-            SetStatus("Giriş iptal edildi.");
+            SetStatus(language.loginCancelled);
         }
 
         public void SignOut()
@@ -107,7 +108,7 @@ namespace BalloonGame
         private IEnumerator DeviceLoginFlow(string clientId)
         {
             TwitchTokenStore.RememberClientId(clientId);
-            SetStatus("Twitch bağlantısı hazırlanıyor…");
+            SetStatus(language.preparingConnection);
 
             WWWForm form = new WWWForm();
             form.AddField("client_id", clientId);
@@ -117,19 +118,19 @@ namespace BalloonGame
             yield return request.SendWebRequest();
             if (request.result != UnityWebRequest.Result.Success)
             {
-                Fail(ReadError(request, "Cihaz giriş kodu alınamadı."));
+                Fail(ReadError(request, language.deviceCodeRequestFailed));
                 yield break;
             }
 
             DeviceCodeResponse device = JsonUtility.FromJson<DeviceCodeResponse>(request.downloadHandler.text);
             if (device == null || string.IsNullOrWhiteSpace(device.device_code))
             {
-                Fail("Twitch geçerli bir cihaz kodu döndürmedi.");
+                Fail(language.invalidDeviceCode);
                 yield break;
             }
 
             DeviceCodeReady?.Invoke(device.user_code, device.verification_uri);
-            SetStatus("Tarayıcıda Twitch iznini onayla.");
+            SetStatus(language.approveInBrowser);
             Application.OpenURL(device.verification_uri);
 
             float deadline = Time.realtimeSinceStartup + Mathf.Max(1, device.expires_in);
@@ -163,14 +164,14 @@ namespace BalloonGame
                     yield return ValidateCurrentSession(result => valid = result);
                     if (!valid)
                     {
-                        Fail("Twitch tokenı doğrulanamadı.");
+                        Fail(language.tokenValidationFailed);
                         yield break;
                     }
 
                     TwitchTokenStore.Save(Session);
                     StartHourlyValidation();
                     activeAuthentication = null;
-                    SetStatus("Twitch girişi tamamlandı.");
+                    SetStatus(language.loginComplete);
                     Authenticated?.Invoke(Session);
                     yield break;
                 }
@@ -186,11 +187,11 @@ namespace BalloonGame
                     continue;
                 }
 
-                Fail(string.IsNullOrWhiteSpace(message) ? "Twitch girişi tamamlanamadı." : message);
+                Fail(string.IsNullOrWhiteSpace(message) ? language.loginFailed : message);
                 yield break;
             }
 
-            Fail("Twitch giriş kodunun süresi doldu. Tekrar dene.");
+            Fail(language.loginCodeExpired);
         }
 
         private IEnumerator ValidateCurrentSession(Action<bool> completed)
@@ -284,7 +285,7 @@ namespace BalloonGame
                 {
                     Session = null;
                     TwitchTokenStore.Delete();
-                    AuthenticationFailed?.Invoke("Twitch oturumunun süresi doldu. Yeniden giriş yapılmalı.");
+                    AuthenticationFailed?.Invoke(language.sessionExpired);
                     sessionValidation = null;
                     if (SceneManager.GetActiveScene().name != "TwitchLogin")
                         SceneManager.LoadScene("TwitchLogin");

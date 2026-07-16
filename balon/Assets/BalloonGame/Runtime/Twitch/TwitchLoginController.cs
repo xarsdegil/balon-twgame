@@ -12,6 +12,7 @@ namespace BalloonGame
 
         [Header("References")]
         public BalloonGameSettings settings;
+        public BalloonLanguage language;
         public GameObject loadingGroup;
         public GameObject loginGroup;
         public Button loginButton;
@@ -26,6 +27,7 @@ namespace BalloonGame
             authService = TwitchAuthService.Instance;
             if (authService == null)
                 authService = new GameObject("Twitch Authentication").AddComponent<TwitchAuthService>();
+            authService.language = language;
 
             authService.StatusChanged += SetStatus;
             authService.DeviceCodeReady += ShowDeviceCode;
@@ -49,7 +51,7 @@ namespace BalloonGame
 
         private IEnumerator CheckSavedLogin()
         {
-            SetStatus("Kayıtlı Twitch oturumu kontrol ediliyor…");
+            SetStatus(language.checkingSavedSessionStatus);
             bool valid = false;
             yield return authService.RestoreSavedSession(result => valid = result);
             if (valid)
@@ -59,14 +61,14 @@ namespace BalloonGame
             }
 
             SetLoading(false);
-            SetStatus("Devam etmek için Twitch ile giriş yap.");
+            SetStatus(language.loginReady);
         }
 
         private void BeginLogin()
         {
             if (settings == null || string.IsNullOrWhiteSpace(settings.twitchClientId))
             {
-                OnAuthenticationFailed("Uygulama Twitch Client ID ayarı eksik.");
+                OnAuthenticationFailed(language.missingClientId);
                 return;
             }
 

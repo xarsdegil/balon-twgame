@@ -8,4 +8,4 @@
 - Add code and components when they improve clarity, editability, or safe iteration; minimizing file count is not a goal.
 - Do not require paid assets or third-party tween packages for the core prototype.
 - Never store Twitch OAuth tokens in version-controlled assets.
-
+- Store every user-visible game or UI string in the language ScriptableObject; do not add user-facing text literals directly to scenes or runtime scripts.

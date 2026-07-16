@@ -6,7 +6,6 @@ namespace BalloonGame
     public sealed class PlayerQueue
     {
         private readonly Queue<ChatPlayer> players = new Queue<ChatPlayer>();
-        private readonly HashSet<string> queuedIds = new HashSet<string>();
 
         public int Count => players.Count;
         public bool IsEmpty => players.Count == 0;
@@ -15,11 +14,10 @@ namespace BalloonGame
         {
             if (player == null || string.IsNullOrWhiteSpace(player.userId))
                 return false;
-            if (players.Count >= maximumLength || queuedIds.Contains(player.userId))
+            if (players.Count >= maximumLength)
                 return false;
 
             players.Enqueue(player);
-            queuedIds.Add(player.userId);
             return true;
         }
 
@@ -32,11 +30,11 @@ namespace BalloonGame
             }
 
             player = players.Dequeue();
-            queuedIds.Remove(player.userId);
             return true;
         }
 
-        public bool Contains(string userId) => queuedIds.Contains(userId);
+        public bool Contains(string userId) =>
+            players.Any(player => player.userId == userId);
 
         public IReadOnlyList<ChatPlayer> Snapshot(int count = 6)
         {
@@ -46,8 +44,6 @@ namespace BalloonGame
         public void Clear()
         {
             players.Clear();
-            queuedIds.Clear();
         }
     }
 }
-

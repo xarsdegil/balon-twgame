@@ -10,6 +10,7 @@ namespace BalloonGame
         public CommandManager commandManager;
         public BalloonController balloonController;
         public GameHudController hud;
+        public TwitchChatService twitchChatService;
 
         [Header("Runtime (read only)")]
         public BalloonGameState state = BalloonGameState.Waiting;
@@ -73,6 +74,7 @@ namespace BalloonGame
                     SetState(BalloonGameState.Exploding);
                     yield return balloonController.Explode();
                     hud.ShowResult(player);
+                    AnnounceExplosion(player);
                     yield return new WaitForSecondsRealtime(settings.resultDisplayDuration);
                     SetState(BalloonGameState.Resetting);
                     StartNewRound();
@@ -104,6 +106,27 @@ namespace BalloonGame
         {
             state = nextState;
             hud.SetState(nextState);
+        }
+
+        private void AnnounceExplosion(ChatPlayer player)
+        {
+            if (player == null ||
+                string.IsNullOrWhiteSpace(player.userId) ||
+                player.userId.StartsWith("local-", System.StringComparison.OrdinalIgnoreCase) ||
+                twitchChatService == null ||
+                !twitchChatService.IsConnected)
+                return;
+
+            string displayName = string.IsNullOrWhiteSpace(player.displayName)
+                ? player.username
+                : player.displayName;
+            string message = string.IsNullOrWhiteSpace(settings.explosionChatMessage)
+                ? settings.language.defaultExplosionChatMessage
+                : settings.explosionChatMessage;
+            message = message
+                .Replace("{player}", displayName)
+                .Replace("{username}", player.username ?? displayName);
+            twitchChatService.SendChatMessage(message);
         }
 
         [ContextMenu("Force Explosion On Next Turn")]
