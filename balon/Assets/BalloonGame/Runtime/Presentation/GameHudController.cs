@@ -1,0 +1,158 @@
+using System.Collections;
+using System.Text;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace BalloonGame
+{
+    public class GameHudController : MonoBehaviour
+    {
+        [Header("References")]
+        public BalloonGameSettings settings;
+        public CommandManager commandManager;
+        public TwitchChatService twitchService;
+        public Text stateText;
+        public Text roundText;
+        public Text queueCountText;
+        public Text queueListText;
+        public Text currentPlayerText;
+        public Text commandText;
+        public Text connectionText;
+        public Text resultText;
+        public CanvasGroup resultGroup;
+
+        private Coroutine resultRoutine;
+
+        private void OnEnable()
+        {
+            if (commandManager != null)
+                commandManager.QueueChanged += RefreshQueue;
+            if (twitchService != null)
+                twitchService.StatusChanged += SetConnectionStatus;
+        }
+
+        private void OnDisable()
+        {
+            if (commandManager != null)
+                commandManager.QueueChanged -= RefreshQueue;
+            if (twitchService != null)
+                twitchService.StatusChanged -= SetConnectionStatus;
+        }
+
+        private void Start()
+        {
+            commandText.text = settings != null ? settings.command : "!sisir";
+            SetConnectionStatus(twitchService != null ? twitchService.Status : "Yerel test modu");
+            SetState(BalloonGameState.Waiting);
+            SetCurrentPlayer(null);
+            RefreshQueue();
+            if (resultGroup != null)
+                resultGroup.alpha = 0f;
+        }
+
+        public void SetState(BalloonGameState state)
+        {
+            if (stateText == null)
+                return;
+            switch (state)
+            {
+                case BalloonGameState.Inflating:
+                    stateText.text = "ŞİŞİRİLİYOR";
+                    break;
+                case BalloonGameState.CheckingExplosion:
+                    stateText.text = "GERİLİM ARTIYOR";
+                    break;
+                case BalloonGameState.Exploding:
+                    stateText.text = "PATLADI!";
+                    break;
+                case BalloonGameState.Resetting:
+                    stateText.text = "YENİ TUR";
+                    break;
+                default:
+                    stateText.text = "OYUNCU BEKLENİYOR";
+                    break;
+            }
+        }
+
+        public void SetRound(int roundNumber)
+        {
+            if (roundText != null)
+                roundText.text = "TUR " + roundNumber.ToString("00");
+        }
+
+        public void SetCurrentPlayer(ChatPlayer player)
+        {
+            if (currentPlayerText == null)
+                return;
+            if (player == null || settings == null || !settings.showPlayerNames)
+            {
+                currentPlayerText.text = "Sıradaki cesur izleyici bekleniyor…";
+                currentPlayerText.color = settings != null ? settings.mutedTextColor : Color.gray;
+                return;
+            }
+
+            currentPlayerText.text = player.displayName + " balonu şişiriyor";
+            currentPlayerText.color = player.nameColor;
+        }
+
+        public void ShowResult(ChatPlayer player)
+        {
+            if (resultRoutine != null)
+                StopCoroutine(resultRoutine);
+            resultRoutine = StartCoroutine(ResultAnimation(player));
+        }
+
+        private IEnumerator ResultAnimation(ChatPlayer player)
+        {
+            resultText.text = "BALONU\n" + player.displayName.ToUpperInvariant() + "\nPATLATTI!";
+            resultText.color = player.nameColor;
+            float elapsed = 0f;
+            const float entrance = 0.24f;
+            while (elapsed < entrance)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / entrance);
+                resultGroup.alpha = t;
+                resultGroup.transform.localScale = Vector3.one * Mathf.Lerp(0.82f, 1f, 1f - Mathf.Pow(1f - t, 3f));
+                yield return null;
+            }
+            resultGroup.alpha = 1f;
+        }
+
+        public void HideResult()
+        {
+            if (resultRoutine != null)
+                StopCoroutine(resultRoutine);
+            resultRoutine = null;
+            if (resultGroup != null)
+                resultGroup.alpha = 0f;
+        }
+
+        public void RefreshQueue()
+        {
+            if (commandManager == null)
+                return;
+
+            queueCountText.text = commandManager.QueueCount.ToString("00");
+            StringBuilder builder = new StringBuilder();
+            var preview = commandManager.GetQueuePreview(6);
+            if (preview.Count == 0)
+            {
+                builder.Append("Henüz kimse sırada değil");
+            }
+            else
+            {
+                for (int i = 0; i < preview.Count; i++)
+                    builder.Append(i + 1).Append(".  ").Append(preview[i].displayName).AppendLine();
+            }
+            queueListText.text = builder.ToString().TrimEnd();
+        }
+
+        private void SetConnectionStatus(string value)
+        {
+            if (connectionText != null)
+                connectionText.text = value;
+        }
+    }
+}
+

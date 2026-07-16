@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8dbfbc6153e64a4695ea3bf60783901, type: 3}
+  m_Name: BalloonGameSettings
+  m_EditorClassIdentifier: Assembly-CSharp::BalloonGame.BalloonGameSettings
+  twitchChannel: 
+  command: '!sisir'
+  oauthToken: 
+  connectToTwitchOnStart: 0
+  minimumInflations: 3
+  maximumInflations: 14
+  maximumQueueLength: 20
+  userCooldownSeconds: 10
+  clearQueueAfterExplosion: 1
+  oneTurnPerUserPerRound: 1
+  inflationDuration: 0.75
+  delayBetweenPlayers: 0.35
+  minimumGrowth: 0.045
+  maximumGrowth: 0.08
+  maximumVisualScale: 2.15
+  inflationEase:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 2.2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.72
+      value: 1.05
+      inSlope: 0.2
+      outSlope: 0.2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: -0.3
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  squashStretchAmount: 0.065
+  idleSwayDegrees: 2.4
+  dangerShakePixels: 8
+  idleSwaySpeed: 1.25
+  preExplosionHold: 0.14
+  explosionDuration: 0.85
+  resultDisplayDuration: 2.2
+  screenShakePixels: 14
+  explosionShardCount: 18
+  backgroundColor: {r: 0.05490196, g: 0.07058824, b: 0.14509805, a: 1}
+  backgroundAccentColor: {r: 0.16862746, g: 0.19607843, b: 0.33333334, a: 1}
+  balloonColor: {r: 1, g: 0.29803923, b: 0.46666667, a: 1}
+  balloonHighlightColor: {r: 1, g: 0.77254903, b: 0.827451, a: 0.8235294}
+  accentColor: {r: 0.37254903, g: 0.9098039, b: 0.80784315, a: 1}
+  primaryTextColor: {r: 0.96862745, g: 0.95686275, b: 1, a: 1}
+  mutedTextColor: {r: 0.6431373, g: 0.6627451, b: 0.7607843, a: 1}
+  showPlayerNames: 1
+  targetFrameRate: 60
+  runInBackground: 1
