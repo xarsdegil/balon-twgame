@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/TwitchLogin.unity
+    guid: d2db1542c950cc14090bf5aa9b347f46
+  - enabled: 1
     path: Assets/Scenes/BalloonGame.unity
     guid: d3dabe20d4a3c7045b016ecbeba86e39
   m_configObjects:

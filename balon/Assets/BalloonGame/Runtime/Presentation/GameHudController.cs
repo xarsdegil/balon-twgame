@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -41,7 +40,8 @@ namespace BalloonGame
 
         private void Start()
         {
-            commandText.text = settings != null ? settings.command : "!sisir";
+            if (commandText != null)
+                commandText.text = settings != null ? settings.command : "!sisir";
             SetConnectionStatus(twitchService != null ? twitchService.Status : "Yerel test modu");
             SetState(BalloonGameState.Waiting);
             SetCurrentPlayer(null);
@@ -86,17 +86,19 @@ namespace BalloonGame
                 return;
             if (player == null || settings == null || !settings.showPlayerNames)
             {
-                currentPlayerText.text = "Sıradaki cesur izleyici bekleniyor…";
-                currentPlayerText.color = settings != null ? settings.mutedTextColor : Color.gray;
+                currentPlayerText.text = string.Empty;
                 return;
             }
 
-            currentPlayerText.text = player.displayName + " balonu şişiriyor";
+            currentPlayerText.text = player.displayName;
             currentPlayerText.color = player.nameColor;
         }
 
         public void ShowResult(ChatPlayer player)
         {
+            if (resultText == null || resultGroup == null)
+                return;
+
             if (resultRoutine != null)
                 StopCoroutine(resultRoutine);
             resultRoutine = StartCoroutine(ResultAnimation(player));
@@ -133,8 +135,12 @@ namespace BalloonGame
             if (commandManager == null)
                 return;
 
-            queueCountText.text = commandManager.QueueCount.ToString("00");
-            StringBuilder builder = new StringBuilder();
+            if (queueCountText != null)
+                queueCountText.text = commandManager.QueueCount.ToString("00");
+            if (queueListText == null)
+                return;
+
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
             var preview = commandManager.GetQueuePreview(6);
             if (preview.Count == 0)
             {
@@ -155,4 +161,3 @@ namespace BalloonGame
         }
     }
 }
-

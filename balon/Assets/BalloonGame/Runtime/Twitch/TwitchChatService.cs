@@ -58,15 +58,21 @@ namespace BalloonGame
                 return;
             }
 
+            TwitchAuthSession session = TwitchAuthService.Instance != null
+                ? TwitchAuthService.Instance.Session
+                : null;
             string channel = FirstNonEmpty(
                 Environment.GetEnvironmentVariable("TWITCH_CHANNEL"),
-                settings.twitchChannel).Trim().TrimStart('#').ToLowerInvariant();
+                FirstNonEmpty(settings.twitchChannel, session != null ? session.login : string.Empty))
+                .Trim().TrimStart('#').ToLowerInvariant();
             string username = FirstNonEmpty(
                 Environment.GetEnvironmentVariable("TWITCH_BOT_USERNAME"),
-                settings.twitchUsername).Trim().ToLowerInvariant();
+                FirstNonEmpty(settings.twitchUsername, session != null ? session.login : string.Empty))
+                .Trim().ToLowerInvariant();
             string token = FirstNonEmpty(
                 Environment.GetEnvironmentVariable("TWITCH_OAUTH_TOKEN"),
-                settings.oauthToken).Trim();
+                FirstNonEmpty(session != null ? session.accessToken : string.Empty, settings.oauthToken))
+                .Trim();
 
             if (string.IsNullOrWhiteSpace(channel))
             {
@@ -96,6 +102,30 @@ namespace BalloonGame
             client = null;
             if (isActiveAndEnabled)
                 SetStatus("Bağlantı kapalı", false);
+        }
+
+        public bool SendChatMessage(string message)
+        {
+            if (!isConnected || writer == null || settings == null)
+                return false;
+
+            string channel = FirstNonEmpty(
+                Environment.GetEnvironmentVariable("TWITCH_CHANNEL"),
+                FirstNonEmpty(
+                    settings.twitchChannel,
+                    TwitchAuthService.Instance != null && TwitchAuthService.Instance.Session != null
+                        ? TwitchAuthService.Instance.Session.login
+                        : string.Empty))
+                .Trim().TrimStart('#').ToLowerInvariant();
+            string sanitized = (message ?? string.Empty)
+                .Replace("\r", " ")
+                .Replace("\n", " ")
+                .Trim();
+            if (string.IsNullOrWhiteSpace(channel) || string.IsNullOrWhiteSpace(sanitized))
+                return false;
+
+            _ = writer.WriteLineAsync("PRIVMSG #" + channel + " :" + sanitized);
+            return true;
         }
 
         private async Task RunConnectionAsync(string channel, string username, string accessToken,

@@ -142,6 +142,10 @@ namespace BalloonGame
             if (balloonHighlight != null)
                 balloonHighlight.color = settings.balloonHighlightColor;
         }
+
+        public void RefreshColors()
+        {
+            ApplyColors();
+        }
     }
 }
-

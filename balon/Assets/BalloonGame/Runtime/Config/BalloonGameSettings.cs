@@ -6,6 +6,8 @@ namespace BalloonGame
     public class BalloonGameSettings : ScriptableObject
     {
         [Header("Twitch")]
+        [Tooltip("Public Twitch application Client ID. End users never enter this value.")]
+        public string twitchClientId = "";
         [Tooltip("Channel name without #. Leave empty while using local test mode.")]
         public string twitchChannel = "";
         [Tooltip("The Twitch account that owns the OAuth token. This may be a dedicated bot account.")]
@@ -58,6 +60,7 @@ namespace BalloonGame
         public bool showPlayerNames = true;
 
         [Header("Application")]
+        [Range(512, 2160)] public int squareResolution = 1080;
         [Range(30, 120)] public int targetFrameRate = 60;
         public bool runInBackground = true;
 

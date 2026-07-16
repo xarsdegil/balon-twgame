@@ -28,6 +28,12 @@ namespace BalloonGame
 
             Application.targetFrameRate = settings.targetFrameRate;
             Application.runInBackground = settings.runInBackground;
+#if !UNITY_EDITOR
+            Screen.SetResolution(
+                settings.squareResolution,
+                settings.squareResolution,
+                FullScreenMode.Windowed);
+#endif
             gameLoop = StartCoroutine(RunGameLoop());
         }
 
