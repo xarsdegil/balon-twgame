@@ -284,17 +284,23 @@ namespace BalloonGame.Editor
                 settings.explosionChatMessage,
                 y);
             y -= step;
-            InputField backgroundInput = SettingsInput(
+            InputField backgroundInput = SettingsColorInput(
                 language.backgroundColorLabel,
                 "#" + ColorUtility.ToHtmlStringRGB(settings.backgroundColor),
-                y);
+                settings.backgroundColor,
+                y,
+                out Button backgroundColorButton,
+                out Image backgroundColorSwatch);
             y -= step;
             Toggle transparentToggle = SettingsToggle(language.transparentBackgroundLabel, false, y);
             y -= step;
-            InputField balloonColorInput = SettingsInput(
+            InputField balloonColorInput = SettingsColorInput(
                 language.balloonColorLabel,
                 "#" + ColorUtility.ToHtmlStringRGB(settings.balloonColor),
-                y);
+                settings.balloonColor,
+                y,
+                out Button balloonColorButton,
+                out Image balloonColorSwatch);
             y -= step;
             Toggle showNamesToggle = SettingsToggle(
                 language.showPlayerNamesLabel,
@@ -367,12 +373,105 @@ namespace BalloonGame.Editor
                 new Vector2(0f, 18f),
                 new Vector2(600f, 30f));
 
+            Image pickerBackground = ImageRect(
+                "Color Picker Panel",
+                sheet,
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f),
+                Vector2.zero,
+                new Vector2(520f, 610f),
+                new Color32(27, 31, 54, 255));
+            pickerBackground.raycastTarget = true;
+            Label(
+                language.colorPickerTitle,
+                pickerBackground.transform,
+                font,
+                30,
+                FontStyle.Bold,
+                textColor,
+                TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 1f),
+                new Vector2(0.5f, 1f),
+                new Vector2(0f, -48f),
+                new Vector2(440f, 52f));
+
+            RectTransform wheelRect = Rect(
+                "HSV Color Wheel",
+                pickerBackground.transform,
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0f, 38f),
+                new Vector2(350f, 350f));
+            HsvColorWheel colorWheel = wheelRect.gameObject.AddComponent<HsvColorWheel>();
+            Image marker = ImageRect(
+                "Color Selection Marker",
+                wheelRect,
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f),
+                Vector2.zero,
+                new Vector2(22f, 22f),
+                Color.black);
+            marker.raycastTarget = false;
+            Image markerCenter = ImageRect(
+                "Marker Center",
+                marker.transform,
+                Vector2.zero,
+                Vector2.one,
+                Vector2.zero,
+                new Vector2(-8f, -8f),
+                Color.white);
+            markerCenter.raycastTarget = false;
+            colorWheel.selectionMarker = marker.rectTransform;
+
+            Image selectedPreview = ImageRect(
+                "Selected Color Preview",
+                pickerBackground.transform,
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0f, -174f),
+                new Vector2(350f, 42f),
+                new Color32(0, 200, 83, 255));
+
+            Button cancelColorButton = Button(
+                language.cancelButton,
+                pickerBackground.transform,
+                font,
+                fieldColor,
+                textColor,
+                new Vector2(0.5f, 0f),
+                new Vector2(-112f, 48f),
+                new Vector2(190f, 54f));
+            Button applyColorButton = Button(
+                language.applyColorButton,
+                pickerBackground.transform,
+                font,
+                accentColor,
+                textColor,
+                new Vector2(0.5f, 0f),
+                new Vector2(112f, 48f),
+                new Vector2(190f, 54f));
+
+            SettingsColorPicker colorPicker = parent.gameObject.AddComponent<SettingsColorPicker>();
+            colorPicker.pickerPanel = pickerBackground.gameObject;
+            colorPicker.colorWheel = colorWheel;
+            colorPicker.selectedColorPreview = selectedPreview;
+            colorPicker.applyButton = applyColorButton;
+            colorPicker.cancelButton = cancelColorButton;
+            colorPicker.backgroundColorInput = backgroundInput;
+            colorPicker.backgroundColorButton = backgroundColorButton;
+            colorPicker.backgroundColorSwatch = backgroundColorSwatch;
+            colorPicker.balloonColorInput = balloonColorInput;
+            colorPicker.balloonColorButton = balloonColorButton;
+            colorPicker.balloonColorSwatch = balloonColorSwatch;
+            colorPicker.defaultPickerColor = new Color32(0, 200, 83, 255);
+
             BalloonSettingsPanel controller = parent.gameObject.AddComponent<BalloonSettingsPanel>();
             controller.settings = settings;
             controller.gameCamera = gameCamera;
             controller.backgroundImage = background;
             controller.commandDisplay = commandText;
             controller.balloonController = balloonController;
+            controller.colorPicker = colorPicker;
             controller.panel = panelBackground.gameObject;
             controller.openButton = openButton;
             controller.closeButton = closeButton;
@@ -396,6 +495,7 @@ namespace BalloonGame.Editor
             SettingsHoverReveal hover = parent.gameObject.AddComponent<SettingsHoverReveal>();
             hover.settingsButtonGroup = buttonGroup;
             hover.settingsPanel = panelBackground.gameObject;
+            pickerBackground.gameObject.SetActive(false);
             panelBackground.gameObject.SetActive(false);
 
             InputField SettingsInput(string title, string value, float rowY)
@@ -422,6 +522,50 @@ namespace BalloonGame.Editor
                     new Vector2(0.5f, 0.5f),
                     new Vector2(205f, rowY),
                     new Vector2(360f, 42f));
+            }
+
+            InputField SettingsColorInput(
+                string title,
+                string value,
+                Color swatchColor,
+                float rowY,
+                out Button swatchButton,
+                out Image swatch)
+            {
+                Label(
+                    title,
+                    sheet,
+                    font,
+                    18,
+                    FontStyle.Normal,
+                    mutedColor,
+                    TextAnchor.MiddleLeft,
+                    new Vector2(0.5f, 0.5f),
+                    new Vector2(0.5f, 0.5f),
+                    new Vector2(-210f, rowY),
+                    new Vector2(350f, 42f));
+                InputField input = Input(
+                    title,
+                    value,
+                    sheet,
+                    font,
+                    fieldColor,
+                    textColor,
+                    new Vector2(0.5f, 0.5f),
+                    new Vector2(165f, rowY),
+                    new Vector2(280f, 42f));
+                swatch = ImageRect(
+                    title + " Color Swatch",
+                    sheet,
+                    new Vector2(0.5f, 0.5f),
+                    new Vector2(0.5f, 0.5f),
+                    new Vector2(385f, rowY),
+                    new Vector2(42f, 42f),
+                    swatchColor);
+                swatch.raycastTarget = true;
+                swatchButton = swatch.gameObject.AddComponent<Button>();
+                swatchButton.targetGraphic = swatch;
+                return input;
             }
 
             Toggle SettingsToggle(string title, bool value, float rowY)

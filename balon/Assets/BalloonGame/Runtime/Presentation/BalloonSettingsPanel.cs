@@ -12,6 +12,7 @@ namespace BalloonGame
         public Image backgroundImage;
         public Text commandDisplay;
         public BalloonController balloonController;
+        public SettingsColorPicker colorPicker;
 
         [Header("Panel")]
         public GameObject panel;
@@ -183,6 +184,8 @@ namespace BalloonGame
             maximumQueueInput.text = values.maximumQueueLength.ToString();
             inflationDurationInput.text = values.inflationDuration.ToString("0.##");
             clearQueueToggle.isOn = values.clearQueueAfterExplosion;
+            if (colorPicker != null)
+                colorPicker.RefreshSwatches();
         }
 
         private string NormalizeCommand(string value)

@@ -49,6 +49,8 @@ Fare oyun penceresinin üzerine geldiğinde sağ üstte `SETTINGS` düğmesi gö
 
 Panelden komut, patlama chat mesajı, arka plan rengi/şeffaflığı, balon rengi, oyuncu adları, katılım kuralı, cooldown, patlama aralığı, kuyruk kapasitesi ve animasyon süresi değiştirilebilir. Patlama mesajında `{player}` görünen Twitch adını, `{username}` ise kullanıcı giriş adını temsil eder. Şeffaf arka plan seçeneği render edilen arka planın alfa değerini sıfırlar; OBS tarafında kullanılan yakalama yönteminin alfa desteği açık olmalıdır.
 
+Arka plan ve balon rengi alanlarının yanındaki renk örneğine tıklanınca HSV renk tekerleği açılır. Seçilen renk canlı önizlenir ve `USE COLOR` ile ilgili hex alanına aktarılır. Varsayılan arka plan rengi `#0E1225`, varsayılan balon rengi ise `#FF4C77` değeridir. Green-screen için renk tekerleğinden `#00FF00` seçilebilir.
+
 ## Language file
 
 Oyunda kullanıcıya gösterilen bütün sabit metinler `Assets/BalloonGame/Config/BalloonLanguageEnglish.asset` dosyasında tutulur. Yeni bir kullanıcı arayüzü metni eklenirken doğrudan script veya sahne içine yazılmamalı, önce `BalloonLanguage` assetine alan olarak eklenmelidir. Yeni bir çeviri için bu asset çoğaltılıp `BalloonGameSettings > Language` alanına atanabilir.

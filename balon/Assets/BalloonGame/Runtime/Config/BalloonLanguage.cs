@@ -30,6 +30,9 @@ namespace BalloonGame
         public string clearQueueLabel = "Clear queue after explosion";
         public string settingsSaved = "Settings saved";
         public string defaultsRestored = "Default settings restored";
+        public string colorPickerTitle = "COLOR PICKER";
+        public string applyColorButton = "USE COLOR";
+        public string cancelButton = "CANCEL";
 
         [Header("Twitch Login")]
         public string loginTitle = "TWITCH CONNECTION";

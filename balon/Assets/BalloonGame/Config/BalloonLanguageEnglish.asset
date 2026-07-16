@@ -34,6 +34,9 @@ MonoBehaviour:
   clearQueueLabel: Clear queue after explosion
   settingsSaved: Settings saved
   defaultsRestored: Default settings restored
+  colorPickerTitle: COLOR PICKER
+  applyColorButton: USE COLOR
+  cancelButton: CANCEL
   loginTitle: TWITCH CONNECTION
   loginDescription: Sign in with Twitch to connect the balloon game to your channel.
   loginButton: SIGN IN WITH TWITCH
