@@ -153,6 +153,8 @@ namespace BalloonGame.Editor
 
             commands.settings = settings;
             commands.twitchChatService = twitch;
+            commands.gameManager = game;
+            commands.localTestInput = testInput;
 
             balloon.settings = settings;
             balloon.balloonAssembly = assembly;

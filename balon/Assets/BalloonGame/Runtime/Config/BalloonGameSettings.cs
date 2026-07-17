@@ -11,6 +11,8 @@ namespace BalloonGame
         [Header("Twitch")]
         [Tooltip("Public Twitch application Client ID. End users never enter this value.")]
         public string twitchClientId = "";
+        [Tooltip("HTTPS base URL of the Cloudflare OAuth Worker. Do not include a trailing slash.")]
+        public string twitchOAuthWorkerUrl = "";
         [Tooltip("Channel name without #. Leave empty while using local test mode.")]
         public string twitchChannel = "";
         [Tooltip("The Twitch account that owns the OAuth token. This may be a dedicated bot account.")]
@@ -21,6 +23,14 @@ namespace BalloonGame
         public bool connectToTwitchOnStart;
         [Tooltip("Sent to the connected channel when a Twitch viewer pops the balloon. Use {player} or {username}.")]
         public string explosionChatMessage = "@{player} popped the balloon!";
+
+        [Header("Owner-Only Twitch Testing")]
+        [Tooltip("Allows the authenticated channel owner to use the two hidden test commands below.")]
+        public bool enableOwnerTestCommands = true;
+        [Tooltip("Adds five local test viewers. Only the authenticated Twitch account can use it.")]
+        public string ownerAddFiveCommand = "!amberotter";
+        [Tooltip("Makes the balloon pop on the next inflation. Only the authenticated Twitch account can use it.")]
+        public string ownerPopNextCommand = "!violetmeteor";
 
         [Header("Round Rules")]
         [Min(1)] public int minimumInflations = 3;

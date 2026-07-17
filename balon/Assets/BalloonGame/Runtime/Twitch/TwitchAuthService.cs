@@ -9,20 +9,17 @@ namespace BalloonGame
 {
     public class TwitchAuthService : MonoBehaviour
     {
-        private const string DeviceEndpoint = "https://id.twitch.tv/oauth2/device";
-        private const string TokenEndpoint = "https://id.twitch.tv/oauth2/token";
         private const string ValidateEndpoint = "https://id.twitch.tv/oauth2/validate";
-        private const string DeviceGrant = "urn:ietf:params:oauth:grant-type:device_code";
-        private const string RequiredScopes = "chat:read chat:edit";
         private static readonly string[] RequiredScopeList = { "chat:read", "chat:edit" };
 
         public static TwitchAuthService Instance { get; private set; }
         public BalloonLanguage language;
+        [SerializeField] private string clientId;
+        [SerializeField] private string oauthWorkerBaseUrl;
         public TwitchAuthSession Session { get; private set; }
         public bool HasAuthenticatedSession => Session != null && Session.HasAccessToken;
 
         public event Action<string> StatusChanged;
-        public event Action<string, string> DeviceCodeReady;
         public event Action<TwitchAuthSession> Authenticated;
         public event Action<string> AuthenticationFailed;
 
@@ -73,18 +70,31 @@ namespace BalloonGame
             completed?.Invoke(valid);
         }
 
-        public void BeginDeviceLogin(string clientId)
+        public void Configure(BalloonGameSettings settings, BalloonLanguage activeLanguage)
         {
-            string normalizedClientId = (clientId ?? string.Empty).Trim();
-            if (string.IsNullOrWhiteSpace(normalizedClientId))
+            language = activeLanguage;
+            clientId = settings != null ? (settings.twitchClientId ?? string.Empty).Trim() : string.Empty;
+            oauthWorkerBaseUrl = settings != null
+                ? (settings.twitchOAuthWorkerUrl ?? string.Empty).Trim().TrimEnd('/')
+                : string.Empty;
+        }
+
+        public void BeginBrowserLogin()
+        {
+            if (string.IsNullOrWhiteSpace(clientId))
             {
                 AuthenticationFailed?.Invoke(language.clientIdRequired);
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(oauthWorkerBaseUrl))
+            {
+                AuthenticationFailed?.Invoke(language.missingOAuthWorker);
                 return;
             }
 
             if (activeAuthentication != null)
                 StopCoroutine(activeAuthentication);
-            activeAuthentication = StartCoroutine(DeviceLoginFlow(normalizedClientId));
+            activeAuthentication = StartCoroutine(BrowserLoginFlow());
         }
 
         public void CancelLogin()
@@ -105,58 +115,74 @@ namespace BalloonGame
             TwitchTokenStore.Delete();
         }
 
-        private IEnumerator DeviceLoginFlow(string clientId)
+        private IEnumerator BrowserLoginFlow()
         {
             TwitchTokenStore.RememberClientId(clientId);
             SetStatus(language.preparingConnection);
 
-            WWWForm form = new WWWForm();
-            form.AddField("client_id", clientId);
-            form.AddField("scopes", RequiredScopes);
-
-            using UnityWebRequest request = UnityWebRequest.Post(DeviceEndpoint, form);
+            StartAuthorizationRequest startBody = new StartAuthorizationRequest
+            {
+                successTitle = language.oauthCallbackSuccessTitle,
+                successMessage = language.oauthCallbackSuccessMessage,
+                failureTitle = language.oauthCallbackFailureTitle,
+                failureMessage = language.oauthCallbackFailureMessage
+            };
+            using UnityWebRequest request = CreateJsonPost(
+                oauthWorkerBaseUrl + "/oauth/start",
+                JsonUtility.ToJson(startBody));
             yield return request.SendWebRequest();
             if (request.result != UnityWebRequest.Result.Success)
             {
-                Fail(ReadError(request, language.deviceCodeRequestFailed));
+                Fail(language.loginFailed);
                 yield break;
             }
 
-            DeviceCodeResponse device = JsonUtility.FromJson<DeviceCodeResponse>(request.downloadHandler.text);
-            if (device == null || string.IsNullOrWhiteSpace(device.device_code))
+            StartAuthorizationResponse start =
+                JsonUtility.FromJson<StartAuthorizationResponse>(request.downloadHandler.text);
+            if (start == null || string.IsNullOrWhiteSpace(start.transactionId) ||
+                string.IsNullOrWhiteSpace(start.pollSecret) ||
+                string.IsNullOrWhiteSpace(start.authorizationUrl))
             {
-                Fail(language.invalidDeviceCode);
+                Fail(language.loginFailed);
                 yield break;
             }
 
-            DeviceCodeReady?.Invoke(device.user_code, device.verification_uri);
             SetStatus(language.approveInBrowser);
-            Application.OpenURL(device.verification_uri);
+            Application.OpenURL(start.authorizationUrl);
 
-            float deadline = Time.realtimeSinceStartup + Mathf.Max(1, device.expires_in);
-            float interval = Mathf.Max(1, device.interval);
+            float deadline = Time.realtimeSinceStartup + 600f;
             while (Time.realtimeSinceStartup < deadline)
             {
-                yield return new WaitForSecondsRealtime(interval);
+                yield return new WaitForSecondsRealtime(1f);
 
-                WWWForm tokenForm = new WWWForm();
-                tokenForm.AddField("client_id", clientId);
-                tokenForm.AddField("scopes", RequiredScopes);
-                tokenForm.AddField("device_code", device.device_code);
-                tokenForm.AddField("grant_type", DeviceGrant);
-
-                using UnityWebRequest tokenRequest = UnityWebRequest.Post(TokenEndpoint, tokenForm);
-                yield return tokenRequest.SendWebRequest();
-
-                if (tokenRequest.result == UnityWebRequest.Result.Success)
+                StatusRequest statusBody = new StatusRequest
                 {
-                    TokenResponse token = JsonUtility.FromJson<TokenResponse>(tokenRequest.downloadHandler.text);
+                    transactionId = start.transactionId,
+                    pollSecret = start.pollSecret
+                };
+                using UnityWebRequest statusRequest = CreateJsonPost(
+                    oauthWorkerBaseUrl + "/oauth/status",
+                    JsonUtility.ToJson(statusBody));
+                yield return statusRequest.SendWebRequest();
+
+                OAuthStatusResponse status = JsonUtility.FromJson<OAuthStatusResponse>(
+                    statusRequest.downloadHandler != null
+                        ? statusRequest.downloadHandler.text
+                        : string.Empty);
+                if (statusRequest.responseCode == 202 ||
+                    (status != null && status.status == "pending"))
+                    continue;
+
+                if (statusRequest.result == UnityWebRequest.Result.Success &&
+                    status != null && status.status == "complete" && status.token != null &&
+                    !string.IsNullOrWhiteSpace(status.token.access_token))
+                {
                     Session = new TwitchAuthSession
                     {
                         clientId = clientId,
-                        accessToken = token.access_token,
-                        refreshToken = token.refresh_token,
-                        scopes = token.scope,
+                        accessToken = status.token.access_token,
+                        refreshToken = status.token.refresh_token,
+                        scopes = status.token.scope,
                         savedAtUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                     };
 
@@ -176,18 +202,7 @@ namespace BalloonGame
                     yield break;
                 }
 
-                OAuthErrorResponse error =
-                    JsonUtility.FromJson<OAuthErrorResponse>(tokenRequest.downloadHandler.text);
-                string message = error != null ? error.message : string.Empty;
-                if (message.IndexOf("authorization_pending", StringComparison.OrdinalIgnoreCase) >= 0)
-                    continue;
-                if (message.IndexOf("slow_down", StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    interval += 1f;
-                    continue;
-                }
-
-                Fail(string.IsNullOrWhiteSpace(message) ? language.loginFailed : message);
+                Fail(language.loginFailed);
                 yield break;
             }
 
@@ -236,12 +251,17 @@ namespace BalloonGame
 
         private IEnumerator RefreshSession(Action<bool> completed)
         {
-            WWWForm form = new WWWForm();
-            form.AddField("client_id", Session.clientId);
-            form.AddField("grant_type", "refresh_token");
-            form.AddField("refresh_token", Session.refreshToken);
+            if (Session == null || !Session.HasRefreshToken ||
+                string.IsNullOrWhiteSpace(oauthWorkerBaseUrl))
+            {
+                completed?.Invoke(false);
+                yield break;
+            }
 
-            using UnityWebRequest request = UnityWebRequest.Post(TokenEndpoint, form);
+            RefreshRequest body = new RefreshRequest { refreshToken = Session.refreshToken };
+            using UnityWebRequest request = CreateJsonPost(
+                oauthWorkerBaseUrl + "/oauth/refresh",
+                JsonUtility.ToJson(body));
             yield return request.SendWebRequest();
             if (request.result != UnityWebRequest.Result.Success)
             {
@@ -250,8 +270,15 @@ namespace BalloonGame
             }
 
             TokenResponse token = JsonUtility.FromJson<TokenResponse>(request.downloadHandler.text);
+            if (token == null || string.IsNullOrWhiteSpace(token.access_token))
+            {
+                completed?.Invoke(false);
+                yield break;
+            }
+
             Session.accessToken = token.access_token;
-            Session.refreshToken = token.refresh_token;
+            if (!string.IsNullOrWhiteSpace(token.refresh_token))
+                Session.refreshToken = token.refresh_token;
             Session.scopes = token.scope;
             Session.savedAtUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             TwitchTokenStore.Save(Session);
@@ -306,23 +333,52 @@ namespace BalloonGame
             AuthenticationFailed?.Invoke(message);
         }
 
-        private static string ReadError(UnityWebRequest request, string fallback)
+        private static UnityWebRequest CreateJsonPost(string url, string json)
         {
-            OAuthErrorResponse error = JsonUtility.FromJson<OAuthErrorResponse>(
-                request.downloadHandler != null ? request.downloadHandler.text : string.Empty);
-            return error != null && !string.IsNullOrWhiteSpace(error.message)
-                ? error.message
-                : fallback;
+            UnityWebRequest request = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST);
+            request.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(json));
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+            request.SetRequestHeader("Accept", "application/json");
+            return request;
         }
 
         [Serializable]
-        private class DeviceCodeResponse
+        private class StartAuthorizationRequest
         {
-            public string device_code;
-            public int expires_in;
-            public int interval;
-            public string user_code;
-            public string verification_uri;
+            public string successTitle;
+            public string successMessage;
+            public string failureTitle;
+            public string failureMessage;
+        }
+
+        [Serializable]
+        private class StartAuthorizationResponse
+        {
+            public string transactionId;
+            public string pollSecret;
+            public string authorizationUrl;
+        }
+
+        [Serializable]
+        private class StatusRequest
+        {
+            public string transactionId;
+            public string pollSecret;
+        }
+
+        [Serializable]
+        private class OAuthStatusResponse
+        {
+            public string status;
+            public string error;
+            public TokenResponse token;
+        }
+
+        [Serializable]
+        private class RefreshRequest
+        {
+            public string refreshToken;
         }
 
         [Serializable]
@@ -343,13 +399,6 @@ namespace BalloonGame
             public string[] scopes;
             public string user_id;
             public int expires_in;
-        }
-
-        [Serializable]
-        private class OAuthErrorResponse
-        {
-            public int status;
-            public string message;
         }
     }
 }

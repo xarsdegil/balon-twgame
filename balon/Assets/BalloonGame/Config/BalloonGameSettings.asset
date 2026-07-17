@@ -14,12 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BalloonGame.BalloonGameSettings
   language: {fileID: 11400000, guid: 3c9f633c19fa4de688d9d01cb7015bcc, type: 2}
   twitchClientId: ulltj8z49x0rvmi94624d6obf0erys
+  twitchOAuthWorkerUrl: https://balloon-twitch-auth.xarsleech.workers.dev
   twitchChannel: 
   twitchUsername: 
   command: '!inflate'
   oauthToken: 
   connectToTwitchOnStart: 1
   explosionChatMessage: '@{player} popped the balloon!'
+  enableOwnerTestCommands: 1
+  ownerAddFiveCommand: '!amberotter'
+  ownerPopNextCommand: '!violetmeteor'
   minimumInflations: 3
   maximumInflations: 35
   maximumQueueLength: 20

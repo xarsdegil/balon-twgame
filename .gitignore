@@ -106,6 +106,12 @@ crashlytics-build.properties
 .env
 .env.*
 !.env.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+/cloudflare/**/node_modules/
+/cloudflare/**/.wrangler/
+/cloudflare/**/dist/
 
 .DS_Store
 Thumbs.db

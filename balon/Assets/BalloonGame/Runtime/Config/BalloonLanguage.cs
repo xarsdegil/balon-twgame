@@ -43,6 +43,7 @@ namespace BalloonGame
         public string checkingSavedSessionStatus = "Checking saved Twitch session...";
         public string missingClientId = "The Twitch application Client ID is missing.";
         public string clientIdRequired = "A Twitch Client ID is required.";
+        public string missingOAuthWorker = "The Twitch sign-in service URL is missing.";
         public string loginCancelled = "Sign-in cancelled.";
         public string preparingConnection = "Preparing Twitch connection...";
         public string deviceCodeRequestFailed = "Could not request a device sign-in code.";
@@ -53,6 +54,10 @@ namespace BalloonGame
         public string loginFailed = "Twitch sign-in could not be completed.";
         public string loginCodeExpired = "The Twitch sign-in code expired. Try again.";
         public string sessionExpired = "The Twitch session expired. Please sign in again.";
+        public string oauthCallbackSuccessTitle = "TWITCH CONNECTED";
+        public string oauthCallbackSuccessMessage = "Authorization complete. You can close this window.";
+        public string oauthCallbackFailureTitle = "TWITCH CONNECTION FAILED";
+        public string oauthCallbackFailureMessage = "Authorization was not completed. You can close this window and try again.";
 
         [Header("Twitch Chat Status")]
         public string localTestMode = "Local test mode";

@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "balloon-twitch-auth",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-17",
+  "workers_dev": true,
+  "kv_namespaces": [
+    {
+      "binding": "OAUTH_SESSIONS",
+        "id": "8eded85551154f52a4e6bd679e3ecbdf"
+    }
+  ]
+}

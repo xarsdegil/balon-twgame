@@ -27,10 +27,9 @@ namespace BalloonGame
             authService = TwitchAuthService.Instance;
             if (authService == null)
                 authService = new GameObject("Twitch Authentication").AddComponent<TwitchAuthService>();
-            authService.language = language;
+            authService.Configure(settings, language);
 
             authService.StatusChanged += SetStatus;
-            authService.DeviceCodeReady += ShowDeviceCode;
             authService.Authenticated += OnAuthenticated;
             authService.AuthenticationFailed += OnAuthenticationFailed;
             loginButton.onClick.AddListener(BeginLogin);
@@ -44,7 +43,6 @@ namespace BalloonGame
             if (authService == null)
                 return;
             authService.StatusChanged -= SetStatus;
-            authService.DeviceCodeReady -= ShowDeviceCode;
             authService.Authenticated -= OnAuthenticated;
             authService.AuthenticationFailed -= OnAuthenticationFailed;
         }
@@ -71,17 +69,17 @@ namespace BalloonGame
                 OnAuthenticationFailed(language.missingClientId);
                 return;
             }
+            if (string.IsNullOrWhiteSpace(settings.twitchOAuthWorkerUrl))
+            {
+                OnAuthenticationFailed(language.missingOAuthWorker);
+                return;
+            }
 
             loginInProgress = true;
             loginButton.interactable = false;
-            deviceCodeText.text = string.Empty;
-            authService.BeginDeviceLogin(settings.twitchClientId);
-        }
-
-        private void ShowDeviceCode(string userCode, string verificationUri)
-        {
-            deviceCodeText.text = userCode;
-            loginButton.interactable = false;
+            if (deviceCodeText != null)
+                deviceCodeText.gameObject.SetActive(false);
+            authService.BeginBrowserLogin();
         }
 
         private void OnAuthenticated(TwitchAuthSession session)

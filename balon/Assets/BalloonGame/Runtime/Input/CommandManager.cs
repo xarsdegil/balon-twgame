@@ -10,6 +10,8 @@ namespace BalloonGame
         [Header("References")]
         public BalloonGameSettings settings;
         public TwitchChatService twitchChatService;
+        public BalloonGameManager gameManager;
+        public LocalTestInput localTestInput;
 
         public event Action QueueChanged;
         public event Action<string> CommandRejected;
@@ -37,10 +39,41 @@ namespace BalloonGame
             if (settings == null)
                 return;
 
+            if (TryHandleOwnerTestCommand(player, message))
+                return;
+
             if (!MatchesCommand(message, settings.command))
                 return;
 
             TrySubmit(player);
+        }
+
+        private bool TryHandleOwnerTestCommand(ChatPlayer player, string message)
+        {
+            bool addFive = MatchesCommand(message, settings.ownerAddFiveCommand);
+            bool popNext = MatchesCommand(message, settings.ownerPopNextCommand);
+            if (!addFive && !popNext)
+                return false;
+
+            if (!settings.enableOwnerTestCommands || !IsAuthenticatedOwner(player))
+                return true;
+
+            if (addFive && localTestInput != null)
+                localTestInput.AddFiveTestPlayers();
+            else if (popNext && gameManager != null)
+                gameManager.ForceExplosionOnNextTurn();
+            return true;
+        }
+
+        private static bool IsAuthenticatedOwner(ChatPlayer player)
+        {
+            TwitchAuthSession session = TwitchAuthService.Instance != null
+                ? TwitchAuthService.Instance.Session
+                : null;
+            return player != null && session != null &&
+                   !string.IsNullOrWhiteSpace(player.userId) &&
+                   !string.IsNullOrWhiteSpace(session.userId) &&
+                   string.Equals(player.userId, session.userId, StringComparison.Ordinal);
         }
 
         public bool TrySubmit(ChatPlayer player)

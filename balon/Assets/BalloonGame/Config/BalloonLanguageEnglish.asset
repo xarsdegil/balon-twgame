@@ -45,6 +45,7 @@ MonoBehaviour:
   checkingSavedSessionStatus: Checking saved Twitch session...
   missingClientId: The Twitch application Client ID is missing.
   clientIdRequired: A Twitch Client ID is required.
+  missingOAuthWorker: The Twitch sign-in service URL is missing.
   loginCancelled: Sign-in cancelled.
   preparingConnection: Preparing Twitch connection...
   deviceCodeRequestFailed: Could not request a device sign-in code.
@@ -55,6 +56,10 @@ MonoBehaviour:
   loginFailed: Twitch sign-in could not be completed.
   loginCodeExpired: The Twitch sign-in code expired. Try again.
   sessionExpired: The Twitch session expired. Please sign in again.
+  oauthCallbackSuccessTitle: TWITCH CONNECTED
+  oauthCallbackSuccessMessage: Authorization complete. You can close this window.
+  oauthCallbackFailureTitle: TWITCH CONNECTION FAILED
+  oauthCallbackFailureMessage: Authorization was not completed. You can close this window and try again.
   localTestMode: Local test mode
   twitchSettingsMissing: Twitch settings are missing
   twitchChannelMissing: Twitch channel name is missing

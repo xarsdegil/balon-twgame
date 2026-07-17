@@ -6749,6 +6749,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BalloonGame.CommandManager
   settings: {fileID: 11400000, guid: d848b02333f2ca44bb9bc2962ae3a125, type: 2}
   twitchChatService: {fileID: 1542234751}
+  gameManager: {fileID: 1542234747}
+  localTestInput: {fileID: 1542234746}
 --- !u!114 &1542234751
 MonoBehaviour:
   m_ObjectHideFlags: 0
